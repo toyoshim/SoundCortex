@@ -35,6 +35,6 @@
 
 void PSGInit();
 void PSGWrite(uint8_t reg, uint8_t value);
-uint8_t PSGUpdate();
+int16_t PSGUpdate();
 
-#endif // __I2CSlave_h__
+#endif // __PSG_h__

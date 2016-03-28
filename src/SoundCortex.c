@@ -33,6 +33,7 @@
 
 #include "I2CSlave.h"
 #include "PSG.h"
+#include "SCC.h"
 #include "SCTimer.h"
 
 // Constant variables to improve readability.
@@ -55,7 +56,8 @@ enum {
 
   SET = 1,
 
-  I2C_ADDRESS = 0x50,
+  I2C_PSG_ADDRESS = 0x50,
+  I2C_SCC_ADDRESS = 0x51,
   PWM_8BIT = 255  // Sampling rate = 12MHz / 256 = 46.875kHz
 };
 
@@ -63,24 +65,31 @@ enum {
 void SystemInit() {}
 
 uint16_t SCTimerPWMUpdate() {
-  return PSGUpdate();
+  // TODO: Use signed signals for both.
+  return (PSGUpdate() >> 3) + (SCCUpdate() >> 3) + 80;
 }
 
 // I2C Slave handling code.
-int i2c_data_index = 0;
-int i2c_data_addr = 0;
+uint8_t i2c_addr = 0;
+uint8_t i2c_data_index = 0;
+uint8_t i2c_data_addr = 0;
 
-void I2CSlaveStart(void) {
+void I2CSlaveStart(uint8_t addr) {
+  i2c_addr = addr;
   i2c_data_index = 0;
 }
 
 bool I2CSlaveWrite(uint8_t data) {
-  if (i2c_data_index == 0)
+  if (i2c_data_index == 0) {
     i2c_data_addr = data;
-  else if (i2c_data_index == 1)
-    PSGWrite(i2c_data_addr, data);
-  else
+  } else if (i2c_data_index == 1) {
+    if (i2c_addr == I2C_PSG_ADDRESS)
+      PSGWrite(i2c_data_addr, data);
+    else
+      SCCWrite(i2c_data_addr, data);
+  } else {
     return false;
+  }
   i2c_data_index++;
   return true;
 }
@@ -96,7 +105,8 @@ int main() {
   LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~PINASSIGN6_CTOUT_0_O_MASK) | (PIN_4 << PINASSIGN6_CTOUT_0_O_BIT);
 
   PSGInit();
-  I2CSlaveInit(I2C_ADDRESS);
+  SCCInit();
+  I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
   SCTimerPWMInit(PWM_8BIT);
 
   for (;;);

@@ -61,12 +61,14 @@ enum {
   I2C_STAT_SLVSTATE_ADDR = (0 << 9),
   I2C_STAT_SLVSTATE_WRITE = (1 << 9),
   I2C_STAT_SLVSTATE_READ = (2 << 9),
+  I2C_STAT_SLVIDX_BIT = 12,
+  I2C_STAT_SLVIDX_MASK = (3 << 12),
 
   I2C_SLVCTL_SLVCONTINUE = (1 << 0),
   I2C_SLVCTL_SLVNACK = (1 << 1)
 };
 
-void I2CSlaveInit(uint8_t address) {
+void I2CSlaveInit(uint8_t address1, uint8_t address2) {
   LPC_SYSCON->SYSAHBCLKCTRL |= CLK_I2C | CLK_IOCON;
 
   LPC_SYSCON->PRESETCTRL &= ~RESET_I2C_N;
@@ -74,7 +76,9 @@ void I2CSlaveInit(uint8_t address) {
 
   LPC_I2C->DIV = 0;  // Try the fastest mode as possible.
   //LPC_I2C->DIV = 30 - 1;  // 12MHz = 100kHz * x4 sampling * 30
-  LPC_I2C->SLVADR1 = (address << 1) | ADR_ENABLE;
+  LPC_I2C->SLVADR1 = (address1 << 1) | ADR_ENABLE;
+  if (address2)
+    LPC_I2C->SLVADR2 = (address2 << 1) | ADR_ENABLE;
 
   LPC_SWM->PINASSIGN7 = (LPC_SWM->PINASSIGN7 & ~PINASSIGN7_I2C_SDA_IO_MASK) | (PIN_0 << PINASSIGN7_I2C_SDA_IO_BIT);
   LPC_SWM->PINASSIGN8 = (LPC_SWM->PINASSIGN8 & ~PINASSIGN8_I2C_SCL_IO_MASK) | (PIN_5 << PINASSIGN8_I2C_SCL_IO_BIT);
@@ -94,10 +98,12 @@ void I2C_IRQHandler(void) {
     LPC_I2C->STAT = I2C_INT_SLVDESEL;
   } else if (LPC_I2C->INTSTAT & I2C_INT_SLVPENDING) {
     switch (LPC_I2C->STAT & I2C_STAT_SLVSTATE_MASK) {
-    case I2C_STAT_SLVSTATE_ADDR:
-      I2CSlaveStart();
+    case I2C_STAT_SLVSTATE_ADDR: {
+      int index = (LPC_I2C->STAT & I2C_STAT_SLVIDX_MASK) >> I2C_STAT_SLVIDX_BIT;
+      I2CSlaveStart((index == 1) ? (LPC_I2C->SLVADR1 >> 1) :
+                    (index == 2) ? (LPC_I2C->SLVADR2 >> 1) : 0);
       LPC_I2C->SLVCTL = I2C_SLVCTL_SLVCONTINUE;
-      break;
+      break; }
     case I2C_STAT_SLVSTATE_WRITE:
       if (!I2CSlaveWrite(LPC_I2C->SLVDAT))
         LPC_I2C->SLVCTL = I2C_SLVCTL_SLVNACK | I2C_SLVCTL_SLVCONTINUE;
@@ -116,7 +122,7 @@ void I2C_IRQHandler(void) {
   }
 }
 
-__attribute__ ((weak)) void I2CSlaveStart() {}
+__attribute__ ((weak)) void I2CSlaveStart(uint8_t addr) {}
 __attribute__ ((weak)) void I2CSlaveStop() {}
 __attribute__ ((weak)) bool I2CSlaveWrite(uint8_t data) { return true; }
 __attribute__ ((weak)) uint8_t I2CSlaveRead() { return 0; }

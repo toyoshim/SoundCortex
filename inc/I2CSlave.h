@@ -34,12 +34,12 @@
 #include "LPC8xx.h"
 
 // Callbacks
-void I2CSlaveStart(void);
+void I2CSlaveStart(uint8_t addr);
 bool I2CSlaveWrite(uint8_t data);
 uint8_t I2CSlaveRead(void);
 void I2CSlaveStop(void);
 
 // Initialize I2C module as a slave with 7-bit address, 100kHz mode.
-void I2CSlaveInit(uint8_t address);
+void I2CSlaveInit(uint8_t address1, uint8_t address2);
 
 #endif // __I2CSlave_h__

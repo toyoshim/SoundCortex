@@ -92,6 +92,5 @@ PSGUpdate:
   UpdateTone iSynth1
   UpdateTone iSynth2
 
-  lsrs rOut, rOut, #2
   pop  {r4-r6, pc}
   .size PSGUpdate, . - PSGUpdate

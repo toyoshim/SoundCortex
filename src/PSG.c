@@ -75,13 +75,12 @@ struct {
 void PSGInit() {
   PSGWork.step = CLK_MSX;
   for (int i = 0; i < 3; ++i) {
-    PSGWork.channel[i].tp = 0;
     PSGWork.synth[i].limit = 0;
     PSGWork.synth[i].count = 0;
     PSGWork.synth[i].on = 0;
     PSGWork.synth[i].out = 0;
-    PSGWork.synth[i].tone = false;
-    PSGWork.synth[i].noise = false;
+    PSGWork.synth[i].tone = 1;
+    PSGWork.synth[i].noise = 1;
   }
   PSGWork.noise.limit = 0;
   PSGWork.noise.count = 0;
