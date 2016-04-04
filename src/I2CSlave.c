@@ -105,15 +105,20 @@ void I2C_IRQHandler(void) {
       LPC_I2C->SLVCTL = I2C_SLVCTL_SLVCONTINUE;
       break; }
     case I2C_STAT_SLVSTATE_WRITE:
-      if (!I2CSlaveWrite(LPC_I2C->SLVDAT))
-        LPC_I2C->SLVCTL = I2C_SLVCTL_SLVNACK | I2C_SLVCTL_SLVCONTINUE;
-      else
+      if (I2CSlaveWrite(LPC_I2C->SLVDAT))
         LPC_I2C->SLVCTL = I2C_SLVCTL_SLVCONTINUE;
+      else
+        LPC_I2C->SLVCTL = I2C_SLVCTL_SLVNACK | I2C_SLVCTL_SLVCONTINUE;
       break;
-    case I2C_STAT_SLVSTATE_READ:
-      LPC_I2C->SLVDAT = I2CSlaveRead();
-      LPC_I2C->SLVCTL = I2C_SLVCTL_SLVCONTINUE;
-      break;
+    case I2C_STAT_SLVSTATE_READ: {
+      uint8_t data;
+      if (I2CSlaveRead(&data)) {
+        LPC_I2C->SLVDAT = data;
+        LPC_I2C->SLVCTL = I2C_SLVCTL_SLVCONTINUE;
+      } else {
+        LPC_I2C->SLVCTL = I2C_SLVCTL_SLVNACK | I2C_SLVCTL_SLVCONTINUE;
+      }
+      break; }
     default:
       LPC_I2C->SLVCTL = I2C_SLVCTL_SLVNACK | I2C_SLVCTL_SLVCONTINUE;
     }
@@ -125,4 +130,4 @@ void I2C_IRQHandler(void) {
 __attribute__ ((weak)) void I2CSlaveStart(uint8_t addr) {}
 __attribute__ ((weak)) void I2CSlaveStop() {}
 __attribute__ ((weak)) bool I2CSlaveWrite(uint8_t data) { return true; }
-__attribute__ ((weak)) uint8_t I2CSlaveRead() { return 0; }
+__attribute__ ((weak)) bool I2CSlaveRead(uint8_t* data) { return false; }

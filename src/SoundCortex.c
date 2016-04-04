@@ -36,6 +36,8 @@
 #include "SCC.h"
 #include "SCTimer.h"
 
+#define BUILD_PSG
+
 // Constant variables to improve readability.
 enum {
   CLK_GPIO = (1 << 6),
@@ -64,9 +66,23 @@ enum {
 // Use an empty function instead of linking with CMSIS_CORE_LPC8xx library.
 void SystemInit() {}
 
+
 uint16_t SCTimerPWMUpdate() {
   // TODO: Use signed signals for both.
-  return (PSGUpdate() >> 3) + (SCCUpdate() >> 3) + 80;
+#if defined(BUILD_PSG)
+  return PSGUpdate() >> 2;
+#else
+  static int c = 0;
+  static uint16_t psg = 0;
+  static uint16_t scc = 0;
+  c++;
+  if (c & 1) {
+    psg = PSGUpdate() >> 3;
+  } else {
+    scc = 80 + (SCCUpdate() >> 3);
+  }
+  return psg + scc;
+#endif
 }
 
 // I2C Slave handling code.
@@ -83,15 +99,29 @@ bool I2CSlaveWrite(uint8_t data) {
   if (i2c_data_index == 0) {
     i2c_data_addr = data;
   } else if (i2c_data_index == 1) {
+#if defined(BUILD_PSG)
+    PSGWrite(i2c_data_addr, data);
+#else
     if (i2c_addr == I2C_PSG_ADDRESS)
       PSGWrite(i2c_data_addr, data);
     else
       SCCWrite(i2c_data_addr, data);
+#endif
   } else {
     return false;
   }
   i2c_data_index++;
   return true;
+}
+
+bool I2CSlaveRead(uint8_t* data) {
+#if defined(BUILD_PSG)
+  return PSGRead(i2c_data_addr, data);
+#else
+  if (i2c_addr == I2C_PSG_ADDRESS)
+    return PSGRead(i2c_data_addr, data);
+  return false;
+#endif
 }
 
 // Initialization and main loop.
@@ -104,9 +134,14 @@ int main() {
   LPC_IOCON->PIO0_4 = PIO_MODE_INACTIVE;
   LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~PINASSIGN6_CTOUT_0_O_MASK) | (PIN_4 << PINASSIGN6_CTOUT_0_O_BIT);
 
+#if defined(BUILD_PSG)
+  PSGInit();
+  I2CSlaveInit(I2C_PSG_ADDRESS, 0);
+#else
   PSGInit();
   SCCInit();
   I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
+#endif
   SCTimerPWMInit(PWM_8BIT);
 
   for (;;);

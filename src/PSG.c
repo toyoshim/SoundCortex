@@ -87,7 +87,7 @@ void PSGInit() {
   PSGWork.noise.seed = 0xffff;
 }
 
-void PSGWrite(uint8_t reg, uint8_t value) {
+bool PSGWrite(uint8_t reg, uint8_t value) {
   switch (reg) {
   case 0x0:  // TP[7:0] for Ch.A
     PSGWork.channel[0].tp = (PSGWork.channel[0].tp & 0x0f00) | value;
@@ -142,5 +142,27 @@ void PSGWrite(uint8_t reg, uint8_t value) {
   case 0xd:  // CONT/ATT/ALT/HOLD
     // TODO: support envelope.
     break;
+  case 0xff: // Virtual Clock
+    if (value == 0)
+      PSGWork.step = CLK_MSX;
+    else
+      PSGWork.step = CLK_4MHZ;
+  default:
+    return false;
   }
+  return true;
+}
+
+bool PSGRead(uint8_t reg, uint8_t* value) {
+  switch (reg) {
+  case 0xfe:  // minor version
+    *value = 0;
+    break;
+  case 0xff:  // major version
+    *value = 1;
+    break;
+  default:
+    return false;
+  }
+  return true;
 }

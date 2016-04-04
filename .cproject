@@ -203,10 +203,7 @@
 		<projectStorage>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;TargetConfig&gt;
 &lt;Properties property_0="" property_2="LPC800_4.cfx" property_3="NXP" property_4="LPC810" property_count="5" version="70200"/&gt;
-&lt;infoList vendor="NXP"&gt;
-&lt;info chip="LPC810" flash_driver="LPC800_4.cfx" match_id="0x0" name="LPC810" stub="crt_emu_cm3_gen"&gt;
-&lt;chip&gt;
-&lt;name&gt;LPC810&lt;/name&gt;
+&lt;infoList vendor="NXP"&gt;&lt;info chip="LPC810" flash_driver="LPC800_4.cfx" match_id="0x0" name="LPC810" stub="crt_emu_cm3_gen"&gt;&lt;chip&gt;&lt;name&gt;LPC810&lt;/name&gt;
 &lt;family&gt;LPC8xx&lt;/family&gt;
 &lt;vendor&gt;NXP (formerly Philips)&lt;/vendor&gt;
 &lt;reset board="None" core="Real" sys="Real"/&gt;
@@ -238,8 +235,7 @@
 &lt;peripheralInstance derived_from="GPIO-PORT" determined="infoFile" id="GPIO-PORT" location="0xa0000000"/&gt;
 &lt;peripheralInstance derived_from="PIN-INT" determined="infoFile" id="PIN-INT" location="0xa0004000"/&gt;
 &lt;/chip&gt;
-&lt;processor&gt;
-&lt;name gcc_name="cortex-m0"&gt;Cortex-M0&lt;/name&gt;
+&lt;processor&gt;&lt;name gcc_name="cortex-m0"&gt;Cortex-M0&lt;/name&gt;
 &lt;family&gt;Cortex-M&lt;/family&gt;
 &lt;/processor&gt;
 &lt;link href="nxp_lpc8xx_peripheral.xme" show="embed" type="simple"/&gt;

@@ -27,15 +27,14 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef __PSG_h__
-#define __PSG_h__
+#ifndef __SCC_h__
+#define __SCC_h__
 
 #include <stdbool.h>
 #include "LPC8xx.h"
 
-void PSGInit();
-bool PSGWrite(uint8_t reg, uint8_t value);
-bool PSGRead(uint8_t reg, uint8_t* value);
-int16_t PSGUpdate();
+void SCCInit();
+void SCCWrite(uint8_t reg, uint8_t value);
+int16_t SCCUpdate();
 
-#endif // __PSG_h__
+#endif // __SCC_h__

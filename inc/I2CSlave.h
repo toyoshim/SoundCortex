@@ -36,7 +36,7 @@
 // Callbacks
 void I2CSlaveStart(uint8_t addr);
 bool I2CSlaveWrite(uint8_t data);
-uint8_t I2CSlaveRead(void);
+bool I2CSlaveRead(uint8_t* data);
 void I2CSlaveStop(void);
 
 // Initialize I2C module as a slave with 7-bit address, 100kHz mode.
