@@ -78,7 +78,7 @@ void SCCWrite(uint8_t reg, uint8_t value) {
     SCCWork.synth[ch].wt[offset] = value;
   } else if (reg <= 0xa9) {
     int ch = (reg - 0xa0) >> 1;
-    if (reg & 0)
+    if (reg & 1)
       SCCWork.channel[ch].tp = (SCCWork.channel[ch].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
     else
       SCCWork.channel[ch].tp = (SCCWork.channel[ch].tp & 0x0f00) | value;

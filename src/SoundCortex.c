@@ -36,10 +36,21 @@
 #include "SCC.h"
 #include "SCTimer.h"
 
-#define BUILD_PSG
+//#define BUILD_PSG
+//#define BUILD_SCC
+#define BUILD_PSG_SCC
 
 // Constant variables to improve readability.
 enum {
+  SYSPLL_PD = (1 << 7),
+  SEL_IRC = 0,
+  SEL_PLLOUT = 3,
+  CLK_ENA_X = 0,
+  CLK_ENA = 1,
+  MSEL_X4 = 3,
+  PSEL_P1 = 1,
+  PLL_LOCK = 1,
+
   CLK_GPIO = (1 << 6),
   CLK_IOCON = (1 << 18),
 
@@ -60,7 +71,7 @@ enum {
 
   I2C_PSG_ADDRESS = 0x50,
   I2C_SCC_ADDRESS = 0x51,
-  PWM_8BIT = 255  // Sampling rate = 12MHz / 256 = 46.875kHz
+  PWM_10BIT = 1023  // Sampling rate = 48MHz / 1024 = 46.875kHz
 };
 
 // Use an empty function instead of linking with CMSIS_CORE_LPC8xx library.
@@ -70,18 +81,11 @@ void SystemInit() {}
 uint16_t SCTimerPWMUpdate() {
   // TODO: Use signed signals for both.
 #if defined(BUILD_PSG)
-  return PSGUpdate() >> 2;
+  return PSGUpdate();
+#elif defined(BUILD_SCC)
+  return 320 + (SCCUpdate() >> 1);
 #else
-  static int c = 0;
-  static uint16_t psg = 0;
-  static uint16_t scc = 0;
-  c++;
-  if (c & 1) {
-    psg = PSGUpdate() >> 3;
-  } else {
-    scc = 80 + (SCCUpdate() >> 3);
-  }
-  return psg + scc;
+  return 160 + (PSGUpdate() >> 1) + (SCCUpdate() >> 2);
 #endif
 }
 
@@ -101,6 +105,8 @@ bool I2CSlaveWrite(uint8_t data) {
   } else if (i2c_data_index == 1) {
 #if defined(BUILD_PSG)
     PSGWrite(i2c_data_addr, data);
+#elif defined(BUILD_SCC)
+    SCCWrite(i2c_data_addr, data);
 #else
     if (i2c_addr == I2C_PSG_ADDRESS)
       PSGWrite(i2c_data_addr, data);
@@ -126,6 +132,17 @@ bool I2CSlaveRead(uint8_t* data) {
 
 // Initialization and main loop.
 int main() {
+  // Main Clock = 12MHz(Internal RC) x 4 (over clocked 48MHz > 30MHz)
+  LPC_SYSCON->PDRUNCFG &= ~SYSPLL_PD;
+  LPC_SYSCON->SYSPLLCLKSEL = SEL_IRC;
+  LPC_SYSCON->SYSPLLCLKUEN = CLK_ENA_X;
+  LPC_SYSCON->SYSPLLCLKUEN = CLK_ENA;
+  LPC_SYSCON->MAINCLKSEL = SEL_PLLOUT;
+  LPC_SYSCON->MAINCLKUEN = CLK_ENA_X;
+  LPC_SYSCON->MAINCLKUEN = CLK_ENA;
+  LPC_SYSCON->SYSPLLCTRL = MSEL_X4 | PSEL_P1;
+  while (!(LPC_SYSCON->SYSPLLSTAT & PLL_LOCK));
+
   LPC_SYSCON->SYSAHBCLKCTRL |= CLK_GPIO | CLK_IOCON;
   NVIC->IP[2] |= (0 << 14) | (1 << 6);
 
@@ -137,12 +154,15 @@ int main() {
 #if defined(BUILD_PSG)
   PSGInit();
   I2CSlaveInit(I2C_PSG_ADDRESS, 0);
+#elif defined(BUILD_SCC)
+  SCCInit();
+  I2CSlaveInit(I2C_SCC_ADDRESS, 0);
 #else
   PSGInit();
   SCCInit();
   I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
 #endif
-  SCTimerPWMInit(PWM_8BIT);
+  SCTimerPWMInit(PWM_10BIT);
 
   for (;;);
   return 0;
