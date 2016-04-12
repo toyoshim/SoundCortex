@@ -35,7 +35,7 @@
 
 void SCCInit();
 bool SCCWrite(uint8_t reg, uint8_t value);
-bool PSGRead(uint8_t reg, uint8_t* value);
+bool SCCRead(uint8_t reg, uint8_t* value);
 int16_t SCCUpdate();
 
 #endif // __SCC_h__
