@@ -89,35 +89,35 @@ void PSGInit() {
 
 bool PSGWrite(uint8_t reg, uint8_t value) {
   switch (reg) {
-  case 0x0:  // TP[7:0] for Ch.A
+  case 0x00:  // TP[7:0] for Ch.A
     PSGWork.channel[0].tp = (PSGWork.channel[0].tp & 0x0f00) | value;
     PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * FOUT;
     break;
-  case 0x1:  // TP[11:8] for Ch.A
+  case 0x01:  // TP[11:8] for Ch.A
     PSGWork.channel[0].tp = (PSGWork.channel[0].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
     PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * FOUT;
     break;
-  case 0x2:  // TP[7:0] for Ch.B
+  case 0x02:  // TP[7:0] for Ch.B
     PSGWork.channel[1].tp = (PSGWork.channel[1].tp & 0x0f00) | value;
     PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * FOUT;
     break;
-  case 0x3:  // TP[11:8] for Ch.B
+  case 0x03:  // TP[11:8] for Ch.B
     PSGWork.channel[1].tp = (PSGWork.channel[1].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
     PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * FOUT;
     break;
-  case 0x4:  // TP[7:0] for Ch.C
+  case 0x04:  // TP[7:0] for Ch.C
     PSGWork.channel[2].tp = (PSGWork.channel[2].tp & 0x0f00) | value;
     PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * FOUT;
     break;
-  case 0x5:  // TP[11:8] for Ch.C
+  case 0x05:  // TP[11:8] for Ch.C
     PSGWork.channel[2].tp = (PSGWork.channel[2].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
     PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * FOUT;
     break;
-  case 0x6:  // NP[4:0]
+  case 0x06:  // NP[4:0]
     PSGWork.noise.np = value & 0x1f;
     PSGWork.noise.limit = (uint32_t)PSGWork.noise.np * 2 * 16 * FOUT;
     break;
-  case 0x7:  // MIXER
+  case 0x07:  // MIXER
     PSGWork.synth[0].tone = !!(value & (1 << 0));
     PSGWork.synth[1].tone = !!(value & (1 << 1));
     PSGWork.synth[2].tone = !!(value & (1 << 2));
@@ -125,28 +125,32 @@ bool PSGWrite(uint8_t reg, uint8_t value) {
     PSGWork.synth[1].noise = !!(value & (1 << 4));
     PSGWork.synth[2].noise = !!(value & (1 << 5));
     break;
-  case 0x8:  // M/L[3:0] for Ch.A
+  case 0x08:  // M/L[3:0] for Ch.A
     PSGWork.channel[0].ml = value & 0x1f;
     PSGWork.synth[0].out = vt[1 + ((PSGWork.channel[0].ml & 0x0f) << 1)];
     break;
-  case 0x9:  // M/L[3:0] for Ch.B
+  case 0x09:  // M/L[3:0] for Ch.B
     PSGWork.channel[1].ml = value & 0x1f;
     PSGWork.synth[1].out = vt[1 + ((PSGWork.channel[1].ml & 0x0f) << 1)];
     break;
-  case 0xa:  // M/L[3:0] for Ch.C
+  case 0x0a:  // M/L[3:0] for Ch.C
     PSGWork.channel[2].ml = value & 0x1f;
     PSGWork.synth[2].out = vt[1 + ((PSGWork.channel[2].ml & 0x0f) << 1)];
     break;
-  case 0xb:  // EP[7:0]
-  case 0xc:  // EP[15:8]
-  case 0xd:  // CONT/ATT/ALT/HOLD
+  case 0x0b:  // EP[7:0]
+  case 0x0c:  // EP[15:8]
+  case 0x0d:  // CONT/ATT/ALT/HOLD
     // TODO: support envelope.
+    break;
+  case 0x0e:
+  case 0x0f:
     break;
   case 0xff: // Virtual Clock
     if (value == 0)
       PSGWork.step = CLK_MSX;
     else
       PSGWork.step = CLK_4MHZ;
+    break;
   default:
     return false;
   }
@@ -156,7 +160,7 @@ bool PSGWrite(uint8_t reg, uint8_t value) {
 bool PSGRead(uint8_t reg, uint8_t* value) {
   switch (reg) {
   case 0xfe:  // minor version
-    *value = 0;
+    *value = 1;
     break;
   case 0xff:  // major version
     *value = 1;

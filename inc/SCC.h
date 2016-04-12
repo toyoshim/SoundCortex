@@ -34,7 +34,8 @@
 #include "LPC8xx.h"
 
 void SCCInit();
-void SCCWrite(uint8_t reg, uint8_t value);
+bool SCCWrite(uint8_t reg, uint8_t value);
+bool PSGRead(uint8_t reg, uint8_t* value);
 int16_t SCCUpdate();
 
 #endif // __SCC_h__

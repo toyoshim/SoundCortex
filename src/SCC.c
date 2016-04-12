@@ -70,7 +70,7 @@ void SCCInit() {
   }
 }
 
-void SCCWrite(uint8_t reg, uint8_t value) {
+bool SCCWrite(uint8_t reg, uint8_t value) {
   // Register map is compatible with SCC+.
   if (reg <= 0x9f) {
     int ch = reg >> 5;
@@ -93,6 +93,27 @@ void SCCWrite(uint8_t reg, uint8_t value) {
     SCCWork.synth[2].tone = !(value & (1 << 2));
     SCCWork.synth[3].tone = !(value & (1 << 3));
     SCCWork.synth[4].tone = !(value & (1 << 4));
+  } else if (reg == 0xff) {
+    // Virtual Clock
+    if (value == 0)
+      SCCWork.step = CLK_MSX;
+    else
+      SCCWork.step = CLK_4MHZ;
   }
   // TODO: mode register.
+  return true;
+}
+
+bool SCCRead(uint8_t reg, uint8_t* value) {
+  switch (reg) {
+  case 0xfe:  // minor version
+    *value = 0;
+    break;
+  case 0xff:  // major version
+    *value = 1;
+    break;
+  default:
+    return false;
+  }
+  return true;
 }
