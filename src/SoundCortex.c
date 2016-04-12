@@ -47,7 +47,7 @@ enum {
   SEL_PLLOUT = 3,
   CLK_ENA_X = 0,
   CLK_ENA = 1,
-  MSEL_X2 = 1,
+  MSEL_X4 = 3,
   PSEL_P1 = 1,
   PLL_LOCK = 1,
 
@@ -71,7 +71,7 @@ enum {
 
   I2C_PSG_ADDRESS = 0x50,
   I2C_SCC_ADDRESS = 0x51,
-  PWM_9BIT = 511  // Sampling rate = 24MHz / 512 = 46.875kHz
+  PWM_10BIT = 1023  // Sampling rate = 48MHz / 1024 = 46.875kHz
 };
 
 // Use an empty function instead of linking with CMSIS_CORE_LPC8xx library.
@@ -83,9 +83,9 @@ uint16_t SCTimerPWMUpdate() {
 #if defined(BUILD_PSG)
   return PSGUpdate();
 #elif defined(BUILD_SCC)
-  return 160 + (SCCUpdate() >> 2);
+  return 320 + (SCCUpdate() >> 1);
 #else
-  return 80 + (PSGUpdate() >> 2) + (SCCUpdate() >> 3);
+  return 160 + (PSGUpdate() >> 1) + (SCCUpdate() >> 2);
 #endif
 }
 
@@ -133,7 +133,7 @@ bool I2CSlaveRead(uint8_t* data) {
 
 // Initialization and main loop.
 int main() {
-  // Main Clock = 12MHz(Internal RC) x 2 = 24MHz
+  // Main Clock = 12MHz(Internal RC) x 4 = 48MHz
   LPC_SYSCON->PDRUNCFG &= ~SYSPLL_PD;
   LPC_SYSCON->SYSPLLCLKSEL = SEL_IRC;
   LPC_SYSCON->SYSPLLCLKUEN = CLK_ENA_X;
@@ -141,7 +141,7 @@ int main() {
   LPC_SYSCON->MAINCLKSEL = SEL_PLLOUT;
   LPC_SYSCON->MAINCLKUEN = CLK_ENA_X;
   LPC_SYSCON->MAINCLKUEN = CLK_ENA;
-  LPC_SYSCON->SYSPLLCTRL = MSEL_X2 | PSEL_P1;
+  LPC_SYSCON->SYSPLLCTRL = MSEL_X4 | PSEL_P1;
   while (!(LPC_SYSCON->SYSPLLSTAT & PLL_LOCK));
 
   LPC_SYSCON->SYSAHBCLKCTRL |= CLK_GPIO | CLK_IOCON;
@@ -163,7 +163,7 @@ int main() {
   SCCInit();
   I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
 #endif
-  SCTimerPWMInit(PWM_9BIT);
+  SCTimerPWMInit(PWM_10BIT);
 
   for (;;);
   return 0;
