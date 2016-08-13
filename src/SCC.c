@@ -88,11 +88,11 @@ bool SCCWrite(uint8_t reg, uint8_t value) {
     SCCWork.channel[ch].ml = value & 0x0f;
     SCCWork.synth[ch].vol = SCCWork.channel[ch].ml;
   } else if (reg == 0xaf) {
-    SCCWork.synth[0].tone = !(value & (1 << 0));
-    SCCWork.synth[1].tone = !(value & (1 << 1));
-    SCCWork.synth[2].tone = !(value & (1 << 2));
-    SCCWork.synth[3].tone = !(value & (1 << 3));
-    SCCWork.synth[4].tone = !(value & (1 << 4));
+    SCCWork.synth[0].tone = value & (1 << 0);
+    SCCWork.synth[1].tone = value & (1 << 1);
+    SCCWork.synth[2].tone = value & (1 << 2);
+    SCCWork.synth[3].tone = value & (1 << 3);
+    SCCWork.synth[4].tone = value & (1 << 4);
   } else if (reg == 0xff) {
     // Virtual Clock
     if (value == 0)
@@ -107,7 +107,7 @@ bool SCCWrite(uint8_t reg, uint8_t value) {
 bool SCCRead(uint8_t reg, uint8_t* value) {
   switch (reg) {
   case 0xfe:  // minor version
-    *value = 0;
+    *value = 1;
     break;
   case 0xff:  // major version
     *value = 1;

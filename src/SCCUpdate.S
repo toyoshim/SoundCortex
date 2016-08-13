@@ -67,7 +67,7 @@
   str  rTmp1, [rWork, #(iSynth + iSynthOffset)]
 1:
   ldr  rTmp2, [rWork, #(iSynth + iSynthTone)]
-  mvns rTmp2, rTmp2
+  orrs rTmp2, rTmp2, rTmp2
   beq  1f
   add  rTmp1, rTmp1, rWork
   ldrsb rTmp1, [rTmp1, rTableOffset]
