@@ -32,13 +32,20 @@
 #include <stdbool.h>
 
 #include "I2CSlave.h"
+#include "MIDI.h"
 #include "PSG.h"
 #include "SCC.h"
 #include "SCTimer.h"
 
+
 //#define BUILD_PSG
 //#define BUILD_SCC
 #define BUILD_PSG_SCC
+//#define BUILD_MIDI
+
+#if defined(BUILD_MIDI)
+#  include "SMF.h"
+#endif
 
 // Constant variables to improve readability.
 enum {
@@ -79,6 +86,9 @@ void SystemInit() {}
 
 
 uint16_t SCTimerPWMUpdate() {
+#if defined(BUILD_MIDI)
+  MIDIUpdate(21, true, 120);  // 21.3usec
+#endif
   // TODO: Use signed signals for both.
 #if defined(BUILD_PSG)
   return PSGUpdate();
@@ -162,6 +172,9 @@ int main() {
   PSGInit();
   SCCInit();
   I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
+#endif
+#if defined(BUILD_MIDI)
+  MIDIInit(SMF);
 #endif
   SCTimerPWMInit(PWM_10BIT);
 

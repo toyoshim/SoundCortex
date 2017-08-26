@@ -31,7 +31,7 @@
 #define __SCC_h__
 
 #include <stdbool.h>
-#include "LPC8xx.h"
+#include <stdint.h>
 
 void SCCInit();
 bool SCCWrite(uint8_t reg, uint8_t value);

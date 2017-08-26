@@ -1,4 +1,4 @@
-// Copyright 2016, Takashi Toyoshima <toyoshim@gmail.com>
+// Copyright 2017, Takashi Toyoshima <toyoshim@gmail.com>
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,15 +27,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef __PSG_h__
-#define __PSG_h__
+#ifndef __MIDI_h__
+#define __MIDI_h__
 
 #include <stdbool.h>
-#include <stdint.h>
 
-void PSGInit();
-bool PSGWrite(uint8_t reg, uint8_t value);
-bool PSGRead(uint8_t reg, uint8_t* value);
-int16_t PSGUpdate();
+bool MIDIInit(const uint8_t* data);
+bool MIDIUpdate(uint16_t tick_us, bool repeat, uint16_t gap);
 
-#endif // __PSG_h__
+#endif // __MIDI_h__
