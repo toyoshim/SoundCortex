@@ -1,4 +1,4 @@
-// Copyright 2016, Takashi Toyoshima <toyoshim@gmail.com>
+// Copyright 2017, Takashi Toyoshima <toyoshim@gmail.com>
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,20 +27,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef __I2CSlave_h__
-#define __I2CSlave_h__
+#ifndef __SPISlave_h__
+#define __SPISlave_h__
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "LPC8xx.h"
 
 // Callbacks
-void I2CSlaveStart(uint8_t addr);
-bool I2CSlaveWrite(uint8_t data);
-bool I2CSlaveRead(uint8_t* data);
-void I2CSlaveStop(void);
+void SPISlaveWrite16(uint16_t data);
 
-// Initialize I2C module as a slave with 7-bit address, 100kHz mode.
-void I2CSlaveInit(uint8_t address1, uint8_t address2);
+// Initialize SPI module as a slave with MSB first, mode 0.
+void SPISlaveInit();
 
-#endif // __I2CSlave_h__
+#endif // __SPISlave_h__

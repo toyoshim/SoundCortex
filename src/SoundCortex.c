@@ -31,19 +31,34 @@
 
 #include <stdbool.h>
 
-#include "I2CSlave.h"
-#include "MIDI.h"
-#include "PSG.h"
-#include "SCC.h"
 #include "SCTimer.h"
 
+//#define BUILD_I2C
+#define BUILD_SPI
 
-//#define BUILD_PSG
-//#define BUILD_SCC
-#define BUILD_PSG_SCC
+#define BUILD_PSG
+#define BUILD_SCC
+
 //#define BUILD_MIDI
 
+#if defined(BUILD_I2C)
+#  include "I2CSlave.h"
+#endif
+
+#if defined(BUILD_PSG)
+#  include "PSG.h"
+#endif
+
+#if defined(BUILD_SCC)
+#  include "SCC.h"
+#endif
+
+#if defined(BUILD_SPI)
+#  include "SPISlave.h"
+#endif
+
 #if defined(BUILD_MIDI)
+#  include "MIDI.h"
 #  include "SMF.h"
 #endif
 
@@ -59,13 +74,13 @@ enum {
   PLL_LOCK = 1,
 
   CLK_GPIO = (1 << 6),
+  CLK_SWM = (1 << 7),
   CLK_IOCON = (1 << 18),
 
   DIR_INPUT = 0,
   DIR_OUTPUT = 1,
 
-  PIN_1 = 1,
-  PIN_4 = 4,
+  PIO0_4 = 4,  // PIN 2
 
   PIO_MODE_INACTIVE = (0 << 3),
 
@@ -76,33 +91,35 @@ enum {
 
   SET = 1,
 
-  I2C_PSG_ADDRESS = 0x50,
-  I2C_SCC_ADDRESS = 0x51,
+  PSG_ADDRESS = 0x50,
+  SCC_ADDRESS = 0x51,
   PWM_10BIT = 1023  // Sampling rate = 48MHz / 1024 = 46.875kHz
 };
 
 // Use an empty function instead of linking with CMSIS_CORE_LPC8xx library.
 void SystemInit() {}
 
-
 uint16_t SCTimerPWMUpdate() {
 #if defined(BUILD_MIDI)
   MIDIUpdate(21, true, 120);  // 21.3usec
 #endif
   // TODO: Use signed signals for both.
-#if defined(BUILD_PSG)
+#if defined(BUILD_PSG) && !defined(BUILD_SCC)
   return PSGUpdate();
-#elif defined(BUILD_SCC)
+#elif !defined(BUILD_PSG) && defined(BUILD_SCC)
   return 320 + (SCCUpdate() >> 1);
-#else
+#elif defined(BUILD_PSG) && defined(BUILD_SCC)
   return 160 + (PSGUpdate() >> 1) + (SCCUpdate() >> 2);
+#else
+  return 0;
 #endif
 }
 
+#if defined(BUILD_I2C)
 // I2C Slave handling code.
-uint8_t i2c_addr = 0;
-uint8_t i2c_data_index = 0;
-uint8_t i2c_data_addr = 0;
+static uint8_t i2c_addr = 0;
+static uint8_t i2c_data_index = 0;
+static uint8_t i2c_data_addr = 0;
 
 void I2CSlaveStart(uint8_t addr) {
   i2c_addr = addr;
@@ -113,15 +130,17 @@ bool I2CSlaveWrite(uint8_t data) {
   if (i2c_data_index == 0) {
     i2c_data_addr = data;
   } else if (i2c_data_index == 1) {
-#if defined(BUILD_PSG)
+#  if defined(BUILD_PSG) && !defined(BUILD_SCC)
     return PSGWrite(i2c_data_addr, data);
-#elif defined(BUILD_SCC)
+#  elif !defined(BUILD_PSG) && defined(BUILD_SCC)
     return SCCWrite(i2c_data_addr, data);
-#else
-    if (i2c_addr == I2C_PSG_ADDRESS)
+#  elif defined(BUILD_PSG) && defined(BUILD_SCC)
+    if (i2c_addr == PSG_ADDRESS)
       return PSGWrite(i2c_data_addr, data);
     return SCCWrite(i2c_data_addr, data);
-#endif
+#  else
+    return false;
+#  endif
   } else {
     return false;
   }
@@ -130,14 +149,43 @@ bool I2CSlaveWrite(uint8_t data) {
 }
 
 bool I2CSlaveRead(uint8_t* data) {
-#if defined(BUILD_PSG)
+#  if defined(BUILD_PSG) && !defined(BUILD_SCC)
   return PSGRead(i2c_data_addr, data);
-#elif defined(BUILD_SCC)
+#  elif !defined(BUILD_PSG) && defined(BUILD_SCC)
   return SCCRead(i2c_data_addr, data);
-#else
-  if (i2c_addr == I2C_PSG_ADDRESS)
+#  elif defined(BUILD_PSG) && defined(BUILD_SCC)
+  if (i2c_addr == PSG_ADDRESS)
     return PSGRead(i2c_data_addr, data);
   return SCCRead(i2c_data_addr, data);
+#  else
+  return false;
+#  endif
+}
+#endif
+
+#if defined(BUILD_SPI)
+static uint8_t spi_chip_select = PSG_ADDRESS;
+
+void SPISlaveWrite16(uint16_t data) {
+  if ((data >> 8) == 0xff)
+    spi_chip_select = data;
+#if defined(BUILD_PSG)
+  else if (spi_chip_select == PSG_ADDRESS)
+    PSGWrite(data >> 8, data);
+#endif
+#if defined(BUILD_SCC)
+  else if (spi_chip_select == SCC_ADDRESS)
+    SCCWrite(data >> 8, data);
+#endif
+}
+#endif
+
+void SlaveInit(uint8_t address1, uint8_t address2) {
+#if defined(BUILD_I2C)
+  I2CSlaveInit(address1, address2);
+#endif
+#if defined(BUILD_SPI)
+  SPISlaveInit();
 #endif
 }
 
@@ -154,24 +202,25 @@ int main() {
   LPC_SYSCON->SYSPLLCTRL = MSEL_X4 | PSEL_P1;
   while (!(LPC_SYSCON->SYSPLLSTAT & PLL_LOCK));
 
-  LPC_SYSCON->SYSAHBCLKCTRL |= CLK_GPIO | CLK_IOCON;
+  LPC_SYSCON->SYSAHBCLKCTRL |= CLK_GPIO | CLK_SWM | CLK_IOCON;
   NVIC->IP[2] |= (0 << 14) | (1 << 6);
 
   LPC_SWM->PINENABLE0 |= DISABLE_RESET;
 
   LPC_IOCON->PIO0_4 = PIO_MODE_INACTIVE;
-  LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~PINASSIGN6_CTOUT_0_O_MASK) | (PIN_4 << PINASSIGN6_CTOUT_0_O_BIT);
+  LPC_SWM->PINASSIGN6 = (LPC_SWM->PINASSIGN6 & ~PINASSIGN6_CTOUT_0_O_MASK) | (PIO0_4 << PINASSIGN6_CTOUT_0_O_BIT);
 
-#if defined(BUILD_PSG)
+#if defined(BUILD_PSG) && !defined(BUILD_SCC)
   PSGInit();
-  I2CSlaveInit(I2C_PSG_ADDRESS, 0);
-#elif defined(BUILD_SCC)
+  SlaveInit(PSG_ADDRESS, 0);
+#elif !defined(BUILD_PSG) && defined(BUILD_SCC)
   SCCInit();
-  I2CSlaveInit(I2C_SCC_ADDRESS, 0);
+  SlaveInit(SCC_ADDRESS, 0);
+#elif defined(BUILD_PSG) && defined(BUILD_SCC)
+  PSGInit();
+  SCCInit();
+  SlaveInit(PSG_ADDRESS, SCC_ADDRESS);
 #else
-  PSGInit();
-  SCCInit();
-  I2CSlaveInit(I2C_PSG_ADDRESS, I2C_SCC_ADDRESS);
 #endif
 #if defined(BUILD_MIDI)
   MIDIInit(SMF);
