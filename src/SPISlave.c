@@ -64,6 +64,7 @@ enum {
 
 void SPISlaveInit() {
   LPC_SYSCON->SYSAHBCLKCTRL |= CLK_SWM | CLK_SPI0 | CLK_IOCON;
+  NVIC->IP[0] |= (3 << 6);  // Set SPI0 interrupt priority to the lowest
 
   LPC_SYSCON->PRESETCTRL &= ~RESET_SPI0_N;
   LPC_SYSCON->PRESETCTRL |= RESET_SPI0_N;

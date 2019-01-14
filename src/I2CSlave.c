@@ -71,6 +71,7 @@ enum {
 
 void I2CSlaveInit(uint8_t address1, uint8_t address2) {
   LPC_SYSCON->SYSAHBCLKCTRL |=  CLK_I2C | CLK_SWM | CLK_IOCON;
+  NVIC->IP[2] |= (3 << 6);  // Set I2C interrupt priority to the lowest
 
   LPC_SYSCON->PRESETCTRL &= ~RESET_I2C_N;
   LPC_SYSCON->PRESETCTRL |= RESET_I2C_N;

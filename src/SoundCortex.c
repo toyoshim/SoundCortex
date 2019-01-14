@@ -34,16 +34,13 @@
 #include "SCTimer.h"
 
 //#define BUILD_I2C
-#define BUILD_SPI
+//#define BUILD_SPI
+#define BUILD_IOEXT
 
 #define BUILD_PSG
 #define BUILD_SCC
 
 //#define BUILD_MIDI
-
-#if defined(BUILD_I2C)
-#  include "I2CSlave.h"
-#endif
 
 #if defined(BUILD_PSG)
 #  include "PSG.h"
@@ -53,8 +50,16 @@
 #  include "SCC.h"
 #endif
 
+#if defined(BUILD_I2C)
+#  include "I2CSlave.h"
+#endif
+
 #if defined(BUILD_SPI)
 #  include "SPISlave.h"
+#endif
+
+#if defined(BUILD_IOEXT)
+#  include "IOEXTSlave.h"
 #endif
 
 #if defined(BUILD_MIDI)
@@ -93,6 +98,12 @@ enum {
 
   PSG_ADDRESS = 0x50,
   SCC_ADDRESS = 0x51,
+
+  PSG_ADDRESS_PORT = 0xa0,
+  PSG_DATA_PORT = 0xa1,
+  SCC_ADDRESS_PORT = 0xa2,
+  SCC_DATA_PORT = 0xa3,
+
   PWM_10BIT = 1023  // Sampling rate = 48MHz / 1024 = 46.875kHz
 };
 
@@ -180,12 +191,86 @@ void SPISlaveWrite16(uint16_t data) {
 }
 #endif
 
+#if defined(BUILD_IOEXT)
+static uint8_t psg_address = 0;
+static uint8_t scc_address = 0;
+
+bool IOEXTSlaveAccess(uint8_t port) {
+  switch (port) {
+#if defined(BUILD_PSG)
+  case PSG_ADDRESS_PORT:
+  case PSG_DATA_PORT:
+    break;
+#endif
+#if defined(BUILD_SCC)
+  case SCC_ADDRESS_PORT:
+  case SCC_DATA_PORT:
+    break;
+#endif
+  default:
+    return false;
+  }
+  return true;
+}
+
+bool IOEXTSlaveWrite(uint8_t port, uint8_t data) {
+  switch (port) {
+#if defined(BUILD_PSG)
+  case PSG_ADDRESS_PORT:
+    psg_address = data;
+    break;
+  case PSG_DATA_PORT:
+    PSGWrite(psg_address, data);
+    break;
+#endif
+#if defined(BUILD_SCC)
+  case SCC_ADDRESS_PORT:
+    scc_address = data;
+    break;
+  case SCC_DATA_PORT:
+    SCCWrite(scc_address, data);
+    break;
+#endif
+  default:
+    return false;
+  }
+  return true;
+}
+
+bool IOEXTSlaveRead(uint8_t port, uint8_t* data) {
+  switch (port) {
+#if defined(BUILD_PSG)
+  case PSG_ADDRESS_PORT:
+    *data = psg_address;
+    break;
+  case PSG_DATA_PORT:
+    PSGRead(psg_address, data);
+    break;
+#endif
+#if defined(BUILD_SCC)
+  case SCC_ADDRESS_PORT:
+    *data = scc_address;
+    break;
+  case SCC_DATA_PORT:
+    SCCRead(scc_address, data);
+    break;
+#endif
+  default:
+    return false;
+  }
+  return true;
+}
+#endif
+
 void SlaveInit(uint8_t address1, uint8_t address2) {
 #if defined(BUILD_I2C)
   I2CSlaveInit(address1, address2);
 #endif
 #if defined(BUILD_SPI)
   SPISlaveInit();
+#endif
+#if defined(BUILD_IOEXT)
+  IOEXTSlaveInit();
 #endif
 }
 
@@ -203,7 +288,7 @@ int main() {
   while (!(LPC_SYSCON->SYSPLLSTAT & PLL_LOCK));
 
   LPC_SYSCON->SYSAHBCLKCTRL |= CLK_GPIO | CLK_SWM | CLK_IOCON;
-  NVIC->IP[2] |= (0 << 14) | (1 << 6);
+  NVIC->IP[2] &= ~(3 << 14);  // Set SCT interrupt priority to the highest
 
   LPC_SWM->PINENABLE0 |= DISABLE_RESET;
 
