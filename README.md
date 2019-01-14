@@ -51,6 +51,7 @@ To use from Raspberry Pi, you can just use built-in I2C. [Here](https://youtu.be
 You may need to hold the pin 1 high on PON, since it is originally assigned to /RESET and the reset function is disabled after start up.
 
 ### LPC812 (SO20)
+#### for IOEXT
 |pin|  function  | |pin|  function   |
 |---|------------|-|---|-------------|
 | 1 |-           | |20 |D6           |
@@ -63,8 +64,8 @@ You may need to hold the pin 1 high on PON, since it is originally assigned to /
 | 8 |D3          | |13 |D1           |
 | 9 |D2          | |12 |/IOE         |
 |10 |-           | |11 |D7           |
-(for IOEXT)
 
+#### for I2C/SPI
 |pin|  function  | |pin|  function   |
 |---|------------|-|---|-------------|
 | 1 |-           | |20 |-            |
@@ -77,7 +78,6 @@ You may need to hold the pin 1 high on PON, since it is originally assigned to /
 | 8 |-           | |13 |-            |
 | 9 |-           | |12 |(SSEL *1)    |
 |10 |-           | |11 |-            |
-(for I2C/SPI)
 
 (*1) is description for SPI enabled built
 
