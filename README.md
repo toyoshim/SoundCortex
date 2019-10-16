@@ -1,6 +1,7 @@
 # SoundCortex
 A firmware that makes your microcomputer work as a historical sound chip.
-See [SoundCortexLPC](https://github.com/toyoshim/SoundCortexLPC) for LPC810/812.
+See [SoundCortexLPC](https://github.com/toyoshim/SoundCortexLPC) for LPC810/812,
+and [SoundCortexSTM](https://github.com/toyoshim/SoundCortexSTM) for STM32F042K6T6.
 
 ## How to use
 You can access to the chip through I2C, SPI, or IOEXT bus.
