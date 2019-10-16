@@ -33,7 +33,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void PSGInit();
+void PSGInit(uint32_t sample_rate);
 bool PSGWrite(uint8_t reg, uint8_t value);
 bool PSGRead(uint8_t reg, uint8_t* value);
 int16_t PSGUpdate();

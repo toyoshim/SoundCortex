@@ -33,7 +33,6 @@
 enum {
   CLK_MSX =  3579545UL,
   CLK_4MHZ = 4000000UL,
-  FOUT = 46875UL,  // Sampling rate
 };
 
 typedef struct {
@@ -52,13 +51,15 @@ typedef struct {
 
 struct {
   uint32_t step;
+  uint32_t fout;
   Synth synth[5];
 
   Channel channel[5];
 } SCCWork;
 
-void SCCInit() {
+void SCCInit(uint32_t sample_rate) {
   SCCWork.step = CLK_MSX;
+  SCCWork.fout = sample_rate;
   for (int i = 0; i < 5; ++i) {
     SCCWork.synth[i].limit = 0;
     SCCWork.synth[i].count = 0;
@@ -82,7 +83,7 @@ bool SCCWrite(uint8_t reg, uint8_t value) {
       SCCWork.channel[ch].tp = (SCCWork.channel[ch].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
     else
       SCCWork.channel[ch].tp = (SCCWork.channel[ch].tp & 0x0f00) | value;
-    SCCWork.synth[ch].limit = (uint32_t)SCCWork.channel[ch].tp * FOUT;
+    SCCWork.synth[ch].limit = (uint32_t)SCCWork.channel[ch].tp * SCCWork.fout;
   } else if (reg <= 0xae) {
     int ch = reg - 0xaa;
     SCCWork.channel[ch].ml = value & 0x0f;

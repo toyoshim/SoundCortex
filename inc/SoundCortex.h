@@ -1,4 +1,4 @@
-// Copyright 2016, Takashi Toyoshima <toyoshim@gmail.com>
+// Copyright 2019, Takashi Toyoshima <toyoshim@gmail.com>
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -11,9 +11,9 @@
 // copyright notice, this list of conditions and the following disclaimer
 // in the documentation and/or other materials provided with the
 // distribution.
-//    * Neither the name of Google Inc. nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+//    * Neither the name of the authors nor the names of its contributors
+// may be used to endorse or promote products derived from this software
+// without specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -27,15 +27,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef __SCC_h__
-#define __SCC_h__
+//#include <stdbool.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#if defined(BUILD_PSG)
+#  include "PSG.h"
+#endif
 
-void SCCInit(uint32_t sample_rate);
-bool SCCWrite(uint8_t reg, uint8_t value);
-bool SCCRead(uint8_t reg, uint8_t* value);
-int16_t SCCUpdate();
+#if defined(BUILD_SCC)
+#  include "SCC.h"
+#endif
 
-#endif // __SCC_h__
+#if defined(BUILD_I2C)
+#  include "I2CSlave.h"
+#endif
+
+#if defined(BUILD_SPI)
+#  include "SPISlave.h"
+#endif
+
+#if defined(BUILD_IOEXT)
+#  include "IOEXTSlave.h"
+#endif
+
+#if defined(BUILD_MIDI)
+#  include "MIDI.h"
+#  include "SMF.h"
+#endif
+
+void SoundCortexInit(uint32_t sample_rate);
+uint16_t SoundCortexUpdate();

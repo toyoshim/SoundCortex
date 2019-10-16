@@ -33,7 +33,6 @@
 enum {
   CLK_MSX =  3579545UL,
   CLK_4MHZ = 4000000UL,
-  FOUT = 46875UL,  // Sampling rate
 };
 
 const uint16_t vt[32] = {
@@ -66,14 +65,16 @@ typedef struct {
 
 struct {
   uint32_t step;
+  uint32_t fout;
   Synth synth[3];
   Noise noise;
 
   Channel channel[3];
 } PSGWork;
 
-void PSGInit() {
+void PSGInit(uint32_t sample_rate) {
   PSGWork.step = CLK_MSX;
+  PSGWork.fout = sample_rate;
   for (int i = 0; i < 3; ++i) {
     PSGWork.synth[i].limit = 0;
     PSGWork.synth[i].count = 0;
@@ -91,31 +92,31 @@ bool PSGWrite(uint8_t reg, uint8_t value) {
   switch (reg) {
   case 0x00:  // TP[7:0] for Ch.A
     PSGWork.channel[0].tp = (PSGWork.channel[0].tp & 0x0f00) | value;
-    PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * FOUT;
+    PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * PSGWork.fout;
     break;
   case 0x01:  // TP[11:8] for Ch.A
     PSGWork.channel[0].tp = (PSGWork.channel[0].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
-    PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * FOUT;
+    PSGWork.synth[0].limit = (uint32_t)PSGWork.channel[0].tp * 16 * PSGWork.fout;
     break;
   case 0x02:  // TP[7:0] for Ch.B
     PSGWork.channel[1].tp = (PSGWork.channel[1].tp & 0x0f00) | value;
-    PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * FOUT;
+    PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * PSGWork.fout;
     break;
   case 0x03:  // TP[11:8] for Ch.B
     PSGWork.channel[1].tp = (PSGWork.channel[1].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
-    PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * FOUT;
+    PSGWork.synth[1].limit = (uint32_t)PSGWork.channel[1].tp * 16 * PSGWork.fout;
     break;
   case 0x04:  // TP[7:0] for Ch.C
     PSGWork.channel[2].tp = (PSGWork.channel[2].tp & 0x0f00) | value;
-    PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * FOUT;
+    PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * PSGWork.fout;
     break;
   case 0x05:  // TP[11:8] for Ch.C
     PSGWork.channel[2].tp = (PSGWork.channel[2].tp & 0x00ff) | ((uint16_t)(value & 0x0f) << 8);
-    PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * FOUT;
+    PSGWork.synth[2].limit = (uint32_t)PSGWork.channel[2].tp * 16 * PSGWork.fout;
     break;
   case 0x06:  // NP[4:0]
     PSGWork.noise.np = value & 0x1f;
-    PSGWork.noise.limit = (uint32_t)PSGWork.noise.np * 2 * 16 * FOUT;
+    PSGWork.noise.limit = (uint32_t)PSGWork.noise.np * 2 * 16 * PSGWork.fout;
     break;
   case 0x07:  // MIXER
     PSGWork.synth[0].tone = !!(value & (1 << 0));
