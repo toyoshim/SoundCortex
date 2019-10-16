@@ -31,7 +31,6 @@
 #define __SPISlave_h__
 
 #include <stdint.h>
-#include "LPC8xx.h"
 
 // Callbacks
 void SPISlaveWrite16(uint16_t data);

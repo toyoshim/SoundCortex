@@ -32,7 +32,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "LPC8xx.h"
 
 // Callbacks
 bool IOEXTSlaveAccess(uint8_t port);

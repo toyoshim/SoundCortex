@@ -32,7 +32,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "LPC8xx.h"
 
 // Callbacks
 void I2CSlaveStart(uint8_t addr);
