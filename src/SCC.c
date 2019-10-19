@@ -51,9 +51,9 @@ typedef struct {
 
 struct {
   uint32_t step;
-  uint32_t fout;
   Synth synth[5];
 
+  uint32_t fout;
   Channel channel[5];
 } SCCWork;
 

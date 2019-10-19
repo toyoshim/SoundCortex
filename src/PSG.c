@@ -65,10 +65,10 @@ typedef struct {
 
 struct {
   uint32_t step;
-  uint32_t fout;
   Synth synth[3];
   Noise noise;
 
+  uint32_t fout;
   Channel channel[3];
 } PSGWork;
 
