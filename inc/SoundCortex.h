@@ -27,7 +27,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-//#include <stdbool.h>
+#ifndef __SoundCortex_h__
+#define __SoundCortex_h__
+
+#include <stdbool.h>
 
 #if defined(BUILD_PSG)
 #  include "PSG.h"
@@ -56,3 +59,5 @@
 
 void SoundCortexInit(uint32_t sample_rate);
 uint16_t SoundCortexUpdate();
+
+#endif // __SoundCortex_h__
